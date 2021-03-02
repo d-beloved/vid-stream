@@ -29,7 +29,19 @@ const returnVideo = async (req, res) => {
   }
 }
 
-const server = createServer().listen(3000, () =>
+const server = createServer((req, res) => {
+  if (req.url === '/video') {
+    returnVideo(req, res);
+  } else {
+    res.writeHead(200, { 'content-Type': 'text/html'});
+    res.end(`
+      <form enctype="multipart/form-data" method="POST" action="/">
+        <input type="file" name="upload-file" />
+        <button>Upload File</button>
+      </form>
+    `)
+  }
+}).listen(3000, () =>
   console.log(`server running on port ${server.address().port}`)
 );
 
