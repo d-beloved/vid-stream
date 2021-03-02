@@ -5,7 +5,7 @@ const fileName = "./bible.mp4";
 
 const fileInfo = promisify(stat);
 
-const server = createServer(async (req, res) => {
+const returnVideo = async (req, res) => {
   const { size } = await fileInfo(fileName);
   // for range request, allowing for skip ahead or repeating already watched part
   const range = req.headers.range;
@@ -27,7 +27,9 @@ const server = createServer(async (req, res) => {
     });
     createReadStream(fileName).pipe(res);
   }
-}).listen(3000, () =>
+}
+
+const server = createServer().listen(3000, () =>
   console.log(`server running on port ${server.address().port}`)
 );
 
