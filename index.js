@@ -1,5 +1,5 @@
 const { createServer } = require("http");
-const { stat, createReadStream } = require("fs");
+const { stat, createReadStream, createWriteStream } = require("fs");
 const { promisify } = require("util");
 const fileName = "./bible.mp4";
 
@@ -27,19 +27,24 @@ const returnVideo = async (req, res) => {
     });
     createReadStream(fileName).pipe(res);
   }
-}
+};
 
+// the request is a readable Stream and it allows you to pipe it to a writable stream (res)
 const server = createServer((req, res) => {
-  if (req.url === '/video') {
+  if (req.method === "POST") {
+    req.pipe(res); // this writes the uploaded file to the browser
+    req.pipe(process.stdout); // this writes the file to the console
+    req.pipe(createWriteStream('./uploaded.file')); // this creates a file and writes the uploaded file to it
+  } else if (req.url === "/video") {
     returnVideo(req, res);
   } else {
-    res.writeHead(200, { 'content-Type': 'text/html'});
+    res.writeHead(200, { "content-Type": "text/html" });
     res.end(`
       <form enctype="multipart/form-data" method="POST" action="/">
         <input type="file" name="upload-file" />
         <button>Upload File</button>
       </form>
-    `)
+    `);
   }
 }).listen(3000, () =>
   console.log(`server running on port ${server.address().port}`)
