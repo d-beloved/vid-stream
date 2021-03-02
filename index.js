@@ -1,6 +1,7 @@
 const { createServer } = require("http");
 const { stat, createReadStream, createWriteStream } = require("fs");
 const { promisify } = require("util");
+const multiparty = require('multiparty');
 const fileName = "./bible.mp4";
 
 const fileInfo = promisify(stat);
@@ -29,12 +30,17 @@ const returnVideo = async (req, res) => {
   }
 };
 
-// the request is a readable Stream and it allows you to pipe it to a writable stream (res)
 const server = createServer((req, res) => {
   if (req.method === "POST") {
-    req.pipe(res); // this writes the uploaded file to the browser
-    req.pipe(process.stdout); // this writes the file to the console
-    req.pipe(createWriteStream('./uploaded.file')); // this creates a file and writes the uploaded file to it
+    let form = new multiparty.Form();
+    form.on('part', (part) => {
+      part.pipe(createWriteStream(`./${part.filename}`))
+        .on('close', () => {
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(`<h1>File uploaded: ${part.filename}</h1>`);
+        })
+    });
+    form.parse(req);
   } else if (req.url === "/video") {
     returnVideo(req, res);
   } else {
